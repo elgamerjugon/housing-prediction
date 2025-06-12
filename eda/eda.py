@@ -2,7 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-pd.set_option("display.max_columns", None).
+pd.set_option("display.max_columns", None)
 pd.set_option("display.max_rows", None)
 
 df = pd.read_csv("../data/train.csv")
@@ -37,3 +37,28 @@ df.select_dtypes("number").hist(figsize=(16, 20), bins=50, xlabelsize=8, ylabels
 # MSSubclass is numerical?
 # Skewed: LotFrontage, LotArea, TotalBasementSF, 1flSF, GrLvArea
 # Curious YearBuilt, there's a cap on 1950 for YearRemodAdd, MasVnrArea
+
+df.select_dtypes("O").columns
+df.head()
+sns.countplot(data=df, x="OverallQual")
+sns.countplot(data=df, x="OverallCond")
+sns.countplot(data=df, x="SaleCondition")
+
+# What's the difference between ovaerallcondition and overallquality?
+# Overall quality refers to materials and finishes
+# Overall condition refers to the real condition of the house
+
+sns.scatterplot(data=df, x="SalePrice", y="OverallCond")
+sns.scatterplot(data=df, x="SalePrice", y="OverallQual")
+
+# Seems that Sale price depends more on the materials and finishes than the condition of the house
+sns.scatterplot(data=df, x="SalePrice", y="LotArea")
+
+# Also, lot Are is not directly correlated with SalePrice
+plt.figure(figsize=(25, 25))
+sns.heatmap(data=df.select_dtypes("number").corr(), annot=True, fmt=".2f", cmap="coolwarm", cbar=True, square=True)
+
+# Lots of interesting correlations and it seems that they are positive correlations
+# High correlation with SalePrice: LotFrontage, LotArea, OverallQual, YearBuilt, YearRemodAdd, MasVnrArea, BsmtFinSF1
+# TotalBasemnt, 1stFSF, 2ndflsf, GrLivArea, FullBath, HalfBath, TotRoomAbvGrnd, Fireplaces, GarageYearBuilt, GarageCars, GaragLivArea
+# WoodDeckSF, OpenPorchSF
