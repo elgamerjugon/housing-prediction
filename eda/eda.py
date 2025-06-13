@@ -29,8 +29,6 @@ df.columns
 # SalePrice distribution. Skewed to the right, outliers existence
 sns.histplot(data=df, x="SalePrice", kde=True)
 
-sns.pairplot(data=df)
-
 # Distribution for all numerical columns
 df.select_dtypes("number").hist(figsize=(16, 20), bins=50, xlabelsize=8, ylabelsize=8)
 
@@ -62,3 +60,16 @@ sns.heatmap(data=df.select_dtypes("number").corr(), annot=True, fmt=".2f", cmap=
 # High correlation with SalePrice: LotFrontage, LotArea, OverallQual, YearBuilt, YearRemodAdd, MasVnrArea, BsmtFinSF1
 # TotalBasemnt, 1stFSF, 2ndflsf, GrLivArea, FullBath, HalfBath, TotRoomAbvGrnd, Fireplaces, GarageYearBuilt, GarageCars, GaragLivArea
 # WoodDeckSF, OpenPorchSF
+
+# Correlated cols with SalePrice
+df.columns
+cor_cols = ["LotFrontage", "LotArea", "OverallQual", "YearBuilt", "YearRemodAdd", "MasVnrArea", "BsmtFinSF1",
+            "TotalBsmtSF", "1stFlrSF", "2ndFlrSF", "GrLivArea", "FullBath", "HalfBath", "TotRmsAbvGrd", 
+            "Fireplaces", "GarageYrBlt", "GarageCars", "GarageArea", "WoodDeckSF", "OpenPorchSF"]
+
+
+for col in cor_cols:
+    sns.scatterplot(data=df, x="SalePrice", y=col)
+    plt.show()
+
+sns.boxplot(data=df, x="OverallQual", y="SalePrice")
