@@ -2,6 +2,14 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+from sklearn.impute import SimpleImputer
+from sklearn.pipeline import Pipeline
+from sklearn.compose import ColumnTransformer
+from sklearn.dummy import DummyRegressor
+from sklearn.preprocessing import OneHotEncoder
+
+from utils.feature_engineer import FeatureEngineer
+
 pd.set_option("display.max_columns", None)
 pd.set_option("display.max_rows", None)
 
@@ -73,3 +81,25 @@ for col in cor_cols:
     plt.show()
 
 sns.boxplot(data=df, x="OverallQual", y="SalePrice")
+
+# Data cleaning
+df_cleaned = df.drop(columns=["Alley", "PoolQC", "Fence", "MiscFeature"])
+
+# Preprocessing
+# Apply log LotFrontage, LotArea, TotalBasementSF, 1flSF, GrLvArea
+cat_cols = df_cleaned.select_dtypes("O").columns
+num_cols = df_cleaned.select_dtypes("number").columns
+to_log_cols = ["LotFrontage", "LotArea", "TotalBasementSF", "Fence", "MiscFeature"]
+
+log_transformer = Pipeline(steps=[
+    ("log_transformer", FeatureEngineer())
+])
+
+cat_transformer = Pipeline(steps=[
+    ("onehot_transformer", OneHotEncoder(handle_unknown="ignore")),
+    ("imputer", SimpleImputer(strategy="constant", fill_value="NA"))
+])
+
+num_transformer = Pipeline(steps=[
+    ("imputer", SimpleImputer(strategy="mean"))
+])
