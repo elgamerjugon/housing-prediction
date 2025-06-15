@@ -11,9 +11,9 @@ class FeatureEngineer(BaseEstimator, TransformerMixin):
     def fit(self, X, y=None):
         return self
 
-    def trasnform(self, X):
+    def transform(self, X):
         X = X.copy()
-        for col in self.columns:
-            X["log_" + col] = np.log1p(X[col])
-        X.drop(columns=self.columns, inpalce=True)
-        return X
+        # for col in self.columns:
+        #     X["log_" + col] = np.log1p(X[col])
+        # X.drop(columns=self.columns, inplace=True)
+        return np.log1p(X)

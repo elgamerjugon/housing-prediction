@@ -1,13 +1,20 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+import sys
+import os
 
 from sklearn.impute import SimpleImputer
 from sklearn.pipeline import Pipeline
 from sklearn.compose import ColumnTransformer
 from sklearn.dummy import DummyRegressor
 from sklearn.preprocessing import OneHotEncoder
+from sklearn.model_selection import train_test_split, RandomizedSearchCV
+from sklearn.linear_model import LinearRegression, Ridge, Lasso, ElasticNet
+from sklearn.ensemble import RandomForestRegressor, AdaBoostRegressor, GradientBoostingRegressor
+from sklearn.pipeline import Pipeline
 
+sys.path.append(os.path.abspath(".."))
 from utils.feature_engineer import FeatureEngineer
 
 pd.set_option("display.max_columns", None)
@@ -91,10 +98,6 @@ cat_cols = df_cleaned.select_dtypes("O").columns
 num_cols = df_cleaned.select_dtypes("number").columns
 to_log_cols = ["LotFrontage", "LotArea", "TotalBasementSF", "Fence", "MiscFeature"]
 
-log_transformer = Pipeline(steps=[
-    ("log_transformer", FeatureEngineer())
-])
-
 cat_transformer = Pipeline(steps=[
     ("onehot_transformer", OneHotEncoder(handle_unknown="ignore")),
     ("imputer", SimpleImputer(strategy="constant", fill_value="NA"))
@@ -103,3 +106,48 @@ cat_transformer = Pipeline(steps=[
 num_transformer = Pipeline(steps=[
     ("imputer", SimpleImputer(strategy="mean"))
 ])
+
+preprocessor = ColumnTransformer(transformers=[
+    ("cat_transformer", cat_transformer, cat_cols),
+    ("num_transformer", num_transformer, num_cols),
+    ("log_transformer", FeatureEngineer(columns=to_log_cols), to_log_cols)
+], remainder="passthrough")
+
+pipeline = Pipeline(steps=[
+    ("preprocessor", preprocessor),
+    ("model", DummyRegressor())
+])
+
+param_grid = [
+    {
+        "model": [LinearRegression()],
+    },
+    {
+        "model": [Ridge()],
+        "model__alpha": [0.01, 0.1, 1, 10, 100]
+    },
+    {
+        "model": [Lasso(max_iter=10000)],
+        "model__alpha": [0.0001, 0.001, 0.01, 0.1, 1]
+    },
+    {
+        "model": [ElasticNet(max_iter=10000)],
+        "model__alpha": [0.0001, 0.001, 0.01, 0.1, 1],
+        "model__l1_ratio": [0.2, 0.5, 0.8]
+    },
+    {
+        "model": [RandomForestRegressor()],
+        "model__n_estimators": [100, 200, 300, 400, 500],
+        "model__max_depth": [None, 10, 20, 30, 40, 50],
+        "model__min_samples_split": [2, 5, 10],
+        "model__min_samples_leaf": [1, 2, 4],
+        "model__max_features": ["auto", "sqrt", "log2"]
+    }
+]
+X = df_cleaned.drop(columns="SalePrice")
+y = df.SalePrice
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+
+rs = RandomizedSearchCV(estimator=pipeline, param_distributions=param_grid, cv=5)
+rs.fit(X_train, y_train)
