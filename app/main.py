@@ -2,7 +2,7 @@ import joblib
 import cloudpickle
 import sys
 import os
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from fastapi import FastAPI
 import pandas as pd
 
@@ -57,8 +57,8 @@ class House(BaseModel):
     HeatingQC: str
     CentralAir: str
     Electrical: str
-    firstFlrSF: int
-    secondFlrSF: int
+    firstFlrSF: int = Field(..., alias="1stFlrSF")
+    secondFlrSF: int = Field(..., alias="2ndFlrSF")
     LowQualFinSF: int
     GrLivArea: int
     BsmtFullBath: int
@@ -83,7 +83,7 @@ class House(BaseModel):
     WoodDeckSF: int
     OpenPorchSF: int
     EnclosedPorch: int
-    thirdSsnPorch: int
+    thirdSsnPorch: int = Field(..., alias="3SsnPorch")
     ScreenPorch: int
     PoolArea: int
     PoolQC: str
@@ -96,13 +96,7 @@ class House(BaseModel):
     SaleCondition: str 
 
 @app.post("/predict")
-
 def predict(house: House):
-    X_train = pd.read_csv("../data/train.csv")
-    X_train.drop(columns=["SalePrice"])
-    fe = FeatureEngineer(columns=["LotFrontage", "LotArea", "TotalBsmtSF"])
-    fe.fit(X_train)
-    json = pd.DataFrame([house.dict()])
-    json = fe.transform(json)
+    json = pd.DataFrame([house.dict(by_alias=True)])
     prediction = pipeline.predict(json)[0]
-    return f"House prce = {float(prediction)}"
+    return f"House price = {float(prediction)}"
